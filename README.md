@@ -75,8 +75,8 @@ estágio.
 ## Separação de tarefas
 
 ### Sofia
-- Descrição do problema e requisitos
-- ADRs
+- Descrição do problema e requisitos: [docs/requisitos.md](docs/requisitos.md)
+- ADRs: [docs/adr/](docs/adr/)
 
 ### pessoa 02
 - Modelo de domínio e responsabilidades
