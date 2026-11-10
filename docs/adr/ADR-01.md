@@ -4,7 +4,7 @@ Status: aceita
 
 ## Contexto
 
-O sistema precisa cadastrar vagas, receber candidaturas, homologar, designar orientador e controlar documentos e atividades. A equipe entrega documentação e protótipo num único trabalho. A pergunta da disciplina é como atender esse fluxo e ainda assim evoluir sem dependências desnecessárias.
+O sistema precisa cadastrar vagas, receber candidaturas, homologar, designar orientador e controlar documentos e atividades. 
 
 Três requisitos puxam a estrutura: a regra de documentos e de aprovação muda sem varrer o código ([ASR1](../requisitos.md#asr1)), o aviso externo é substituível ([ASR2](../requisitos.md#asr2)) e a consulta de situação respeita o papel ([ASR3](../requisitos.md#asr3)).
 

@@ -17,6 +17,8 @@ O [ADR-01](ADR-01.md) deixou o armazenamento fora do núcleo. Não disse o que a
 
 **Pipes and filters.** Cada ato é um filtro: candidatura, homologação, documentos, atividades, encerramento. A saída de um entra no próximo. O fluxo parece isso, porque a homologação só vem depois da candidatura aceita. Não é isso no uso. A atividade não é a saída da homologação: o estudante acrescenta outra no mesmo estágio, meses depois. O documento recusado não avança: volta a pendente. A concedente e o orientador não consomem a saída de um filtro. Precisam do processo como ele está.
 
+**Arquitetura orientada a eventos.** Cada ato publica um fato, como candidatura aceita ou estágio homologado, e outro agente reage. O aviso ao estudante seria um assinante. A coordenação não homologa por isso: ela lê a candidatura aceita, escolhe o orientador e só então grava o estágio. A atividade, meses depois, também não reage a estágio homologado. Ela lê o estado em andamento. O fato serve ao aviso, e esse aviso é a porta do [ADR-03](ADR-03.md). No núcleo, o ato seguinte continuaria dependendo do registro, com chamada local entre módulos, como no [ADR-01](ADR-01.md).
+
 **Repository.** Um registro do processo no centro. Candidatar, homologar, entregar documento, lançar atividade e encerrar leem esse registro, aplicam a regra e gravam de volta. Ninguém passa o processo adiante. A situação é o próprio registro. Termo, plano, relatório e um relatório parcial futuro são itens com tipo e estado ali, não filtros novos.
 
 ## Decisão
