@@ -78,13 +78,13 @@ estágio.
 - Descrição do problema e requisitos: [docs/requisitos.md](docs/requisitos.md)
 - ADRs: [docs/adr/](docs/adr/)
 
-### pessoa 02
+### Alex
 - Modelo de domínio e responsabilidades
 - Análise de evolução
 
-### pessoa 03
+### Mayara
 - Modelagem UML
 - Alternativas e trade-offs
 
-### pessoa 04
+### Gabriel
 - Proposta arquitetural
