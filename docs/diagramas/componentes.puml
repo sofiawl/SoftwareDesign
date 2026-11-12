@@ -1,0 +1,53 @@
+@startuml componentes
+title Diagrama de componentes - Gerenciamento de estágios
+skinparam componentStyle uml2
+skinparam linetype ortho
+
+component "Interface / Entrada\n(telas, API do protótipo)" as Entrada
+component "Composição (Main)\nescolhe os adaptadores" as Main
+
+package "Camada de aplicação" {
+  component "Casos de uso\nCadastrarVaga, Candidatar, DecidirCandidatura,\nHomologarEstagio, EntregarDocumento, RecusarDocumento,\nRegistrarAtividade, EncerrarEstagio, ConsultarSituacao" as UC
+}
+
+package "Núcleo" {
+  component "Vagas\nVaga, Candidatura" as Vagas
+  component "Estágio\nEstagio" as Estagio
+  component "Acompanhamento\nDocumento, Atividade" as Acomp
+  component "Política de estágio\nPoliticaEstagio, RecortePorPapel, TipoDocumento,\nSituacaoProcesso, SituacaoVisivel" as Pol
+  component "Portas\nRepositorioProcesso, LeituraSituacao,\nNotificador, Aviso" as Portas
+}
+
+package "Adaptadores (fora do núcleo)" {
+  component "RepositorioPersistente\n(RNF02)" as Repo
+  component "NotificadorSimulado\n(RNF04)" as Notif
+}
+
+Entrada --> UC
+Main --> UC
+Main ..> Repo : <<instancia>>
+Main ..> Notif : <<instancia>>
+
+UC --> Vagas
+UC --> Estagio
+UC --> Acomp
+UC --> Pol
+UC --> Portas
+
+Estagio --> Vagas
+Estagio --> Acomp
+Estagio --> Pol
+Acomp --> Pol
+Portas --> Vagas
+Portas --> Estagio
+Portas --> Pol
+
+Repo ..> Portas : <<implementa>>\nRepositorioProcesso,\nLeituraSituacao
+Notif ..> Portas : <<implementa>>\nNotificador
+
+note bottom of Portas
+  O núcleo não depende de nenhum adaptador.
+  Vagas e Política não dependem de ninguém.
+  Não há ciclo entre componentes.
+end note
+@enduml

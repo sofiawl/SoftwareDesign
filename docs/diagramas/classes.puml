@@ -1,0 +1,150 @@
+@startuml classes
+title Diagrama de classes - Gerenciamento de estágios
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+left to right direction
+
+package "Módulo Vagas" {
+  class Vaga {
+    -id
+    -concedenteId
+    -area
+    -cargaHorariaSemanal
+    -periodo
+    -preRequisitos
+    -estado : EstadoVaga
+    +candidatar(estudanteId) : Candidatura
+    +candidatura(candidaturaId) : Candidatura
+    +encerrar()
+  }
+  class Candidatura {
+    -id
+    -estudanteId
+    -estado : EstadoCandidatura
+    -motivoRecusa
+    +aceitar()
+    +recusar(motivo)
+    +estaAceita() : bool
+  }
+}
+
+package "Módulo Estágio" {
+  class Estagio {
+    -id
+    -candidaturaId
+    -orientadorId
+    -estado : EstadoEstagio
+    -motivoEncerramento
+    +{static} homologar(candidatura, orientadorId, tiposObrigatorios) : Estagio
+    +entregarDocumento(tipo)
+    +recusarDocumento(tipo, motivo)
+    +registrarAtividade(data, descricao, horas)
+    +encerrar(motivo)
+  }
+}
+
+package "Módulo Acompanhamento" {
+  class Documento {
+    -tipo : TipoDocumento
+    -estado : EstadoDocumento
+    -motivoRecusa
+    +entregar()
+    +recusar(motivo)
+  }
+  class Atividade {
+    -data
+    -descricao
+    -cargaHoraria
+  }
+}
+
+package "Módulo Política de estágio" {
+  interface PoliticaEstagio {
+    +documentosObrigatorios() : List<TipoDocumento>
+    +podeDecidir(etapa, papel) : bool
+  }
+  class PoliticaRegulamentoVigente
+  class RecortePorPapel {
+    +recortar(situacao, solicitante) : SituacaoVisivel
+  }
+  class TipoDocumento <<valor>> {
+    codigo
+    nome
+  }
+}
+
+package "Portas (núcleo)" {
+  interface RepositorioProcesso {
+    +buscarVaga(vagaId) : Vaga
+    +salvarVaga(vaga)
+    +buscarVagaDaCandidatura(candidaturaId) : Vaga
+    +buscarEstagio(estagioId) : Estagio
+    +salvarEstagio(estagio)
+    +salvarAvisoPendente(aviso, motivoFalha)
+  }
+  interface LeituraSituacao {
+    +carregar(candidaturaId) : SituacaoProcesso
+  }
+  interface Notificador {
+    +notificar(aviso) : ResultadoAviso
+  }
+  class Aviso <<valor>> {
+    destinatario
+    tipoEvento : TipoEvento
+    referenciaId
+    motivo
+  }
+}
+
+package "Adaptadores (fora do núcleo)" {
+  class RepositorioPersistente
+  class NotificadorSimulado {
+    +falharProximo(motivo)
+  }
+}
+
+package "Aplicação (casos de uso)" {
+  class HomologarEstagio {
+    +executar(solicitante, candidaturaId, orientadorId) : ResultadoOperacao
+  }
+  class RegistrarAtividade {
+    +executar(solicitante, estagioId, data, descricao, horas)
+  }
+  class ConsultarSituacao {
+    +executar(solicitante, candidaturaId) : SituacaoVisivel
+  }
+}
+
+' ---------- Domínio ----------
+Vaga "1" *-- "0..*" Candidatura
+Estagio "1" *-- "1..*" Documento
+Estagio "1" *-- "0..*" Atividade
+Estagio ..> Candidatura : lê estaAceita()
+Documento --> TipoDocumento
+PoliticaRegulamentoVigente ..|> PoliticaEstagio
+PoliticaEstagio ..> TipoDocumento : devolve
+
+' ---------- Realizações ----------
+RepositorioPersistente ..|> RepositorioProcesso
+RepositorioPersistente ..|> LeituraSituacao
+NotificadorSimulado ..|> Notificador
+
+' ---------- Dependências dos casos de uso ----------
+HomologarEstagio ..> PoliticaEstagio
+HomologarEstagio ..> RepositorioProcesso
+HomologarEstagio ..> Notificador
+HomologarEstagio ..> Estagio : homologar
+RegistrarAtividade ..> PoliticaEstagio
+RegistrarAtividade ..> RepositorioProcesso
+ConsultarSituacao ..> LeituraSituacao
+ConsultarSituacao ..> RecortePorPapel
+Notificador ..> Aviso
+
+note bottom of HomologarEstagio
+  Demais casos de uso (CadastrarVaga, Candidatar,
+  DecidirCandidatura, EntregarDocumento, RecusarDocumento,
+  EncerrarEstagio) seguem a mesma forma. Só
+  DecidirCandidatura, RecusarDocumento e EncerrarEstagio
+  dependem de Notificador.
+end note
+@enduml

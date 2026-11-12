@@ -1,0 +1,51 @@
+@startuml sequencia
+title Diagrama de sequência - Homologar estágio (RF04, RF09, RNF03)
+autonumber
+
+actor "Coordenação" as Coord
+participant "HomologarEstagio" as UC
+participant "PoliticaEstagio" as Pol
+participant "RepositorioProcesso" as Repo
+participant "Vaga" as Vaga
+participant "Candidatura" as Cand
+participant "Estagio" as Est
+participant "Notificador" as Not
+
+Coord -> UC : executar(solicitante, candidaturaId, orientadorId)
+UC -> Pol : podeDecidir(HOMOLOGACAO, COORDENACAO)
+Pol --> UC : true
+UC -> Repo : buscarVagaDaCandidatura(candidaturaId)
+Repo --> UC : vaga
+UC -> Vaga : candidatura(candidaturaId)
+Vaga --> UC : candidatura
+UC -> Pol : documentosObrigatorios()
+Pol --> UC : tiposObrigatorios
+UC -> Est : homologar(candidatura, orientadorId, tiposObrigatorios)
+Est -> Cand : estaAceita()
+
+alt candidatura não aceita
+  Cand --> Est : false
+  Est --> UC : erro (candidatura não aceita)
+  UC --> Coord : homologação recusada
+else candidatura aceita
+  Cand --> Est : true
+  note over Est : cria um Documento PENDENTE\npor tipo obrigatório
+  Est --> UC : estagio
+  UC -> Repo : salvarEstagio(estagio)
+  UC -> Not : notificar(Aviso ESTAGIO_HOMOLOGADO)
+  alt aviso enviado
+    Not --> UC : sucesso
+    UC --> Coord : estágio homologado
+  else aviso falhou
+    Not --> UC : falha(motivo)
+    UC -> Repo : salvarAvisoPendente(aviso, motivo)
+    UC --> Coord : estágio homologado, avisoPendente = true
+  end
+end
+
+note over UC, Not
+  A decisão é gravada (salvarEstagio) antes de qualquer
+  chamada ao Notificador. Se o aviso falha, o estágio
+  continua homologado e o aviso fica pendente (ADR-03, RNF03).
+end note
+@enduml
