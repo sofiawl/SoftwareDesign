@@ -1,150 +1,101 @@
 @startuml classes
-title Diagrama de classes - Gerenciamento de estágios
+title Diagrama de classes - Homologação de estágio (recorte do sistema)
+
 skinparam classAttributeIconSize 0
-skinparam linetype ortho
-left to right direction
+skinparam defaultFontSize 15
+skinparam ArrowThickness 1.8
+skinparam ArrowColor #222222
+skinparam shadowing false
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam ClassBorderColor #333333
+skinparam ClassBackgroundColor<<app>> #DCE8FF
+skinparam ClassBackgroundColor<<contrato>> #D5F2DC
+skinparam ClassBackgroundColor<<dominio>> #FFE9C7
+skinparam ClassBackgroundColor<<infra>> #E8D9FF
+hide stereotype
+hide empty members
+hide circle
 
-package "Módulo Vagas" {
-  class Vaga {
-    -id
-    -concedenteId
-    -area
-    -cargaHorariaSemanal
-    -periodo
-    -preRequisitos
-    -estado : EstadoVaga
-    +candidatar(estudanteId) : Candidatura
-    +candidatura(candidaturaId) : Candidatura
-    +encerrar()
-  }
-  class Candidatura {
-    -id
-    -estudanteId
-    -estado : EstadoCandidatura
-    -motivoRecusa
-    +aceitar()
-    +recusar(motivo)
-    +estaAceita() : bool
-  }
+' ---------- Aplicação ----------
+class HomologarEstagio <<app>> {
+  +executar(solicitante, candidaturaId, orientadorId)
 }
 
-package "Módulo Estágio" {
-  class Estagio {
-    -id
-    -candidaturaId
-    -orientadorId
-    -estado : EstadoEstagio
-    -motivoEncerramento
-    +{static} homologar(candidatura, orientadorId, tiposObrigatorios) : Estagio
-    +entregarDocumento(tipo)
-    +recusarDocumento(tipo, motivo)
-    +registrarAtividade(data, descricao, horas)
-    +encerrar(motivo)
-  }
+' ---------- Contratos (interfaces estáveis) ----------
+interface PoliticaEstagio <<contrato>> {
+  +documentosObrigatorios()
+  +podeDecidir(etapa, papel)
 }
-
-package "Módulo Acompanhamento" {
-  class Documento {
-    -tipo : TipoDocumento
-    -estado : EstadoDocumento
-    -motivoRecusa
-    +entregar()
-    +recusar(motivo)
-  }
-  class Atividade {
-    -data
-    -descricao
-    -cargaHoraria
-  }
+interface RepositorioProcesso <<contrato>> {
+  +buscarVagaDaCandidatura(candidaturaId)
+  +salvarEstagio(estagio)
+  +salvarAvisoPendente(aviso, motivo)
 }
-
-package "Módulo Política de estágio" {
-  interface PoliticaEstagio {
-    +documentosObrigatorios() : List<TipoDocumento>
-    +podeDecidir(etapa, papel) : bool
-  }
-  class PoliticaRegulamentoVigente
-  class RecortePorPapel {
-    +recortar(situacao, solicitante) : SituacaoVisivel
-  }
-  class TipoDocumento <<valor>> {
-    codigo
-    nome
-  }
-}
-
-package "Portas (núcleo)" {
-  interface RepositorioProcesso {
-    +buscarVaga(vagaId) : Vaga
-    +salvarVaga(vaga)
-    +buscarVagaDaCandidatura(candidaturaId) : Vaga
-    +buscarEstagio(estagioId) : Estagio
-    +salvarEstagio(estagio)
-    +salvarAvisoPendente(aviso, motivoFalha)
-  }
-  interface LeituraSituacao {
-    +carregar(candidaturaId) : SituacaoProcesso
-  }
-  interface Notificador {
-    +notificar(aviso) : ResultadoAviso
-  }
-  class Aviso <<valor>> {
-    destinatario
-    tipoEvento : TipoEvento
-    referenciaId
-    motivo
-  }
-}
-
-package "Adaptadores (fora do núcleo)" {
-  class RepositorioPersistente
-  class NotificadorSimulado {
-    +falharProximo(motivo)
-  }
-}
-
-package "Aplicação (casos de uso)" {
-  class HomologarEstagio {
-    +executar(solicitante, candidaturaId, orientadorId) : ResultadoOperacao
-  }
-  class RegistrarAtividade {
-    +executar(solicitante, estagioId, data, descricao, horas)
-  }
-  class ConsultarSituacao {
-    +executar(solicitante, candidaturaId) : SituacaoVisivel
-  }
+interface Notificador <<contrato>> {
+  +notificar(aviso)
 }
 
 ' ---------- Domínio ----------
-Vaga "1" *-- "0..*" Candidatura
-Estagio "1" *-- "1..*" Documento
-Estagio "1" *-- "0..*" Atividade
-Estagio ..> Candidatura : lê estaAceita()
-Documento --> TipoDocumento
-PoliticaRegulamentoVigente ..|> PoliticaEstagio
-PoliticaEstagio ..> TipoDocumento : devolve
+class Estagio <<dominio>> {
+  -candidaturaId
+  -orientadorId
+  -estado
+  +{static} homologar(candidatura, orientadorId, tipos)
+  +registrarAtividade(data, descricao, horas)
+  +encerrar(motivo)
+}
+class Documento <<dominio>> {
+  -tipo
+  -estado
+  +entregar()
+  +recusar(motivo)
+}
+class Atividade <<dominio>> {
+  -data
+  -descricao
+  -cargaHoraria
+}
+class Vaga <<dominio>> {
+  -concedenteId
+  -estado
+  +candidatar(estudanteId)
+  +candidatura(candidaturaId)
+}
+class Candidatura <<dominio>> {
+  -estudanteId
+  -estado
+  +aceitar()
+  +recusar(motivo)
+  +estaAceita()
+}
 
-' ---------- Realizações ----------
-RepositorioPersistente ..|> RepositorioProcesso
-RepositorioPersistente ..|> LeituraSituacao
-NotificadorSimulado ..|> Notificador
+' ---------- Implementações (fora do núcleo) ----------
+class PoliticaRegulamentoVigente <<infra>>
+class RepositorioPersistente <<infra>>
+class NotificadorSimulado <<infra>>
 
-' ---------- Dependências dos casos de uso ----------
+' ---------- Dependências do caso de uso ----------
 HomologarEstagio ..> PoliticaEstagio
 HomologarEstagio ..> RepositorioProcesso
 HomologarEstagio ..> Notificador
-HomologarEstagio ..> Estagio : homologar
-RegistrarAtividade ..> PoliticaEstagio
-RegistrarAtividade ..> RepositorioProcesso
-ConsultarSituacao ..> LeituraSituacao
-ConsultarSituacao ..> RecortePorPapel
-Notificador ..> Aviso
+HomologarEstagio ..> Estagio
 
-note bottom of HomologarEstagio
-  Demais casos de uso (CadastrarVaga, Candidatar,
-  DecidirCandidatura, EntregarDocumento, RecusarDocumento,
-  EncerrarEstagio) seguem a mesma forma. Só
-  DecidirCandidatura, RecusarDocumento e EncerrarEstagio
-  dependem de Notificador.
-end note
+' ---------- Realizações ----------
+PoliticaEstagio <|.. PoliticaRegulamentoVigente
+RepositorioProcesso <|.. RepositorioPersistente
+Notificador <|.. NotificadorSimulado
+
+' ---------- Composições (a parte não existe sem o todo) ----------
+Estagio "1" *-- "1..*" Documento
+Estagio "1" *-- "0..*" Atividade
+Vaga "1" *-- "0..*" Candidatura
+
+' ---------- Dependência de domínio ----------
+Estagio ..> Candidatura
+
+legend right
+  Azul: aplicação | Verde: contratos (interfaces)
+  Laranja: domínio | Roxo: implementações
+endlegend
 @enduml
