@@ -11,7 +11,7 @@ O sistema é um **monólito modular em camadas, com a camada de apresentação e
 | Apresentação (MVC) | Receber a requisição HTTP, identificar o solicitante, chamar um caso de uso e exibir o resultado | Controllers e Views | Aplicação |
 | Aplicação | Executar cada operação do sistema: checar permissão, carregar, chamar o domínio, gravar e avisar | Casos de uso; interfaces `RepositorioProcesso`, `LeituraSituacao`, `Notificador` | Domínio |
 | Domínio | Regras do processo e do regulamento | Entidades, `PoliticaEstagio`, `RecortePorPapel`, modelos de leitura | nada |
-| Infraestrutura | Tecnologia: banco e canal de aviso | `RepositorioPersistente`, `NotificadorSimulado` | Aplicação (implementa as interfaces) e Domínio (monta as entidades) |
+| Infraestrutura | Tecnologia: banco, canal de aviso e identidade | `RepositorioPersistente`, `NotificadorSimulado`, `CadastroUsuarios` | Aplicação (implementa as interfaces) e Domínio (monta as entidades) |
 
 A **composição** (`Main`) é o ponto de entrada. Ela cria as implementações da infraestrutura, entrega aos casos de uso pelo construtor e registra os Controllers nas rotas. É o único lugar que conhece as classes concretas de todas as camadas.
 
@@ -33,7 +33,7 @@ Os módulos atravessam as camadas. Cada um é dono das suas entidades; outro mó
 | Acompanhamento | Documentos e atividades do estágio | `AcompanhamentoController` | `EntregarDocumento`, `RecusarDocumento`, `RegistrarAtividade` | `Documento`, `Atividade` |
 | Política de estágio | Documentos obrigatórios, quem decide cada etapa e o que cada papel vê | — | — | `PoliticaEstagio`, `PoliticaRegulamentoVigente`, `RecortePorPapel`, `TipoDocumento`, `SituacaoProcesso`, `SituacaoVisivel` |
 
-A **consulta de situação** (RF07) não é um módulo: ela lê as raízes de Vagas e de Estágio juntas e aplica o recorte da Política. Por isso tem Controller e caso de uso próprios (`SituacaoController`, `ConsultarSituacao`), mas nenhuma entidade.
+A **consulta de situação** (RF07) não é um módulo: ela lê as raízes de Vagas e de Estágio juntas e aplica o recorte da Política. Por isso tem Controller e casos de uso próprios (`SituacaoController`, `ConsultarSituacao` e `ListarPainel`), mas nenhuma entidade. `ListarPainel` monta a tela inicial: as vagas (oferta pública, sem dado pessoal) e os processos que o solicitante pode ver. Ele não tem filtro próprio: passa cada processo por `ConsultarSituacao`, então o RNF01 continua aplicado num ponto só (ASR3).
 
 Dependências entre módulos do domínio (sem ciclo):
 
@@ -57,9 +57,11 @@ src/
 │   ├── vagas/           CadastrarVaga, Candidatar, DecidirCandidatura
 │   ├── estagio/         HomologarEstagio, EncerrarEstagio
 │   ├── acompanhamento/  EntregarDocumento, RecusarDocumento, RegistrarAtividade
-│   ├── situacao/        ConsultarSituacao
-│   └── interfaces/      RepositorioProcesso, LeituraSituacao, Notificador,
-│                        Aviso, TipoEvento, ResultadoAviso, AvisoPendente
+│   ├── situacao/        ConsultarSituacao, ListarPainel
+│   ├── interfaces/      RepositorioProcesso, LeituraSituacao, Notificador,
+│   │                    Aviso, TipoEvento, ResultadoAviso, AvisoPendente
+│   └── (apoio)          Solicitante, Resultado, erros, checagem de permissão,
+│                        aviso depois de gravar
 ├── dominio/
 │   ├── vagas/           Vaga, Candidatura
 │   ├── estagio/         Estagio
@@ -68,8 +70,9 @@ src/
 │                        TipoDocumento, SituacaoProcesso, SituacaoVisivel
 ├── infraestrutura/
 │   ├── persistencia/    RepositorioPersistente
-│   └── notificacao/     NotificadorSimulado
-└── main                 composição
+│   ├── notificacao/     NotificadorSimulado
+│   └── identidade/      CadastroUsuarios (login simples)
+└── main.py              composição
 ```
 
 ## 3. Interfaces relevantes
@@ -84,6 +87,7 @@ As interfaces são o que pode ser trocado sem reescrever o resto. Cada uma tem u
 | `buscarVagaDaCandidatura(candidaturaId)` | `Vaga` | idem |
 | `salvarVaga(vaga)` | — | grava a vaga e todas as candidaturas, ou nada |
 | `buscarEstagio(estagioId)` | `Estagio` com documentos e atividades | erro `NaoEncontrado` se não existir |
+| `buscarEstagioDaCandidatura(candidaturaId)` | `Estagio` ou nada | nada se a candidatura ainda não foi homologada; usado para impedir a segunda homologação |
 | `salvarEstagio(estagio)` | — | grava o estágio, documentos e atividades, ou nada |
 | `salvarAvisoPendente(aviso, motivoFalha)` | — | grava o aviso que falhou, com data |
 
@@ -92,6 +96,8 @@ As interfaces são o que pode ser trocado sem reescrever o resto. Cada uma tem u
 | Operação | Retorno | Contrato |
 |---|---|---|
 | `carregar(candidaturaId)` | `SituacaoProcesso` | junta vaga, candidatura e, se houver, estágio com orientador, documentos e atividades; não aplica filtro de papel |
+| `listarVagas()` | lista de dados de vaga | todas as vagas; oferta pública, sem dado de estudante |
+| `listarCandidaturas()` | lista de ids de candidatura | todos os ids; quem decide o que o solicitante vê é o recorte |
 
 Implementada pela mesma classe e sobre o mesmo armazenamento do `RepositorioProcesso` (segregação de interface, não de dados).
 
@@ -152,7 +158,7 @@ Regras de gravação:
 | Integração | Interface | Nesta entrega | Substituível por |
 |---|---|---|---|
 | Aviso ao estudante (RF09) | `Notificador` | `NotificadorSimulado`: guarda os avisos emitidos, registra em log e pode ser configurado para falhar, para demonstrar o aviso pendente | e-mail institucional (SMTP), REST ou SOAP da instituição |
-| Identidade do usuário | sessão do Controller | login simples sobre a tabela `usuario`, sem senha real | autenticação institucional (SSO); afeta só a apresentação, que monta o `Solicitante` |
+| Identidade do usuário | sessão do Controller | login simples sobre a tabela `usuario`, sem senha real (`CadastroUsuarios`, entregue à sessão pela composição) | autenticação institucional (SSO); afeta só a apresentação, que monta o `Solicitante` |
 
 ## 7. Decisões de comunicação
 
@@ -163,7 +169,7 @@ Regras de gravação:
 
 ## 8. Rotas HTTP
 
-Cada rota chama um caso de uso. O papel é o do `Solicitante` montado pela sessão; quem confere a permissão é o caso de uso, via `PoliticaEstagio.podeDecidir`, não o Controller.
+Cada rota chama um caso de uso. O papel é o do `Solicitante` montado pela sessão; quem confere a permissão é o caso de uso, não o Controller. Nas quatro etapas de decisão, a checagem é `PoliticaEstagio.podeDecidir`. Nas demais operações, o caso de uso confere o papel e o vínculo: a concedente só decide candidatura da própria vaga, e o estudante só entrega documento e registra atividade no próprio estágio.
 
 | Método e rota | Controller | Caso de uso | Papel | Dados |
 |---|---|---|---|---|
@@ -177,6 +183,9 @@ Cada rota chama um caso de uso. O papel é o do `Solicitante` montado pela sess�
 | `POST /estagios/{id}/documentos/{tipo}/recusa` | `AcompanhamentoController` | `RecusarDocumento` | coordenação | motivo |
 | `POST /estagios/{id}/atividades` | `AcompanhamentoController` | `RegistrarAtividade` | estudante | data, descrição, carga horária |
 | `GET /candidaturas/{id}/situacao` | `SituacaoController` | `ConsultarSituacao` | todos | — |
+| `GET /` | `SituacaoController` | `ListarPainel` | todos | — |
+
+Rotas de sessão, fora dos casos de uso: `GET /login` (lista os usuários), `POST /login` (grava o usuário escolhido num cookie) e `POST /logout`. Sem sessão, qualquer outra rota redireciona para `/login`.
 
 Como o Controller traduz o resultado do caso de uso:
 

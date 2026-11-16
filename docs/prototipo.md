@@ -39,7 +39,7 @@ Implementação da [proposta arquitetural](arquitetura.md) em Python, só com a 
 
 ## Acréscimos em relação à documentação
 
-Para a interface ser usável, o protótipo tem quatro coisas que os documentos não listavam:
+Para a interface ser usável, o protótipo tem quatro coisas que os documentos não listavam. Todas já estão na [arquitetura](arquitetura.md):
 
 - tela inicial (`GET /`) com vagas e processos, pelo caso de uso `ListarPainel`, que reaproveita `ConsultarSituacao` (o RNF01 continua num ponto só);
 - `LeituraSituacao.listar_vagas()` e `listar_candidaturas()`, para essa tela;
