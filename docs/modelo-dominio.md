@@ -79,6 +79,8 @@ classDiagram
         class LeituraSituacao {
             <<interface>>
             carregar(candidaturaId) SituacaoProcesso
+            listarVagas() List~DadosVaga~
+            listarCandidaturas() List~id~
         }
         class Notificador {
             <<interface>>
@@ -177,8 +179,8 @@ Estados: `EM_ANDAMENTO ──encerrar(motivo)──▶ ENCERRADO`.
 
 | Interface | Quem usa | Implementação desta entrega |
 |---|---|---|
-| `RepositorioProcesso`: `buscarVaga`, `salvarVaga`, `buscarVagaDaCandidatura`, `buscarEstagio`, `salvarEstagio`, `salvarAvisoPendente` | casos de uso que alteram estado | repositório persistente (RNF02) |
-| `LeituraSituacao`: `carregar(candidaturaId)` | só `ConsultarSituacao` | mesma implementação e mesmo armazenamento do repositório |
+| `RepositorioProcesso`: `buscarVaga`, `salvarVaga`, `buscarVagaDaCandidatura`, `buscarEstagio`, `buscarEstagioDaCandidatura`, `salvarEstagio`, `salvarAvisoPendente` | casos de uso que alteram estado | repositório persistente (RNF02) |
+| `LeituraSituacao`: `carregar(candidaturaId)`, `listarVagas()`, `listarCandidaturas()` | `ConsultarSituacao` e `ListarPainel` | mesma implementação e mesmo armazenamento do repositório |
 | `Notificador`: `notificar(Aviso) → ResultadoAviso` | casos de uso do RF09 | `NotificadorSimulado`, que guarda os avisos e pode ser instruído a falhar ([ADR-03](adr/ADR-03.md)) |
 
 `Aviso` = destinatário, `TipoEvento` (`CANDIDATURA_ACEITA`, `CANDIDATURA_RECUSADA`, `ESTAGIO_HOMOLOGADO`, `DOCUMENTO_RECUSADO`, `ESTAGIO_ENCERRADO`), id de referência e motivo opcional.
@@ -192,7 +194,7 @@ A camada de apresentação não tem regra de negócio. Ela traduz a requisição
 | `VagaController` | `CadastrarVaga`, `Candidatar`, `DecidirCandidatura` |
 | `EstagioController` | `HomologarEstagio`, `EncerrarEstagio` |
 | `AcompanhamentoController` | `EntregarDocumento`, `RecusarDocumento`, `RegistrarAtividade` |
-| `SituacaoController` | `ConsultarSituacao` |
+| `SituacaoController` | `ConsultarSituacao`, `ListarPainel` |
 
 Responsabilidades do **Controller**:
 
@@ -221,6 +223,7 @@ Cada operação do sistema é uma classe com um método `executar`:
 | `RegistrarAtividade` | estudante | não |
 | `EncerrarEstagio` | coordenação | sim |
 | `ConsultarSituacao` | todos | não |
+| `ListarPainel` | todos | não |
 
 Roteiro comum dos casos de uso que alteram estado:
 
@@ -230,7 +233,9 @@ Roteiro comum dos casos de uso que alteram estado:
 4. gravar;
 5. se for evento do RF09, chamar `Notificador` **depois** de gravar. Em caso de falha, gravar `AvisoPendente` e devolver `avisoPendente = true` sem desfazer a decisão (RNF03).
 
-`ConsultarSituacao` chama `LeituraSituacao.carregar` e depois `RecortePorPapel.recortar`. Nenhuma outra classe lê a situação, nem o Controller nem a View.
+`ConsultarSituacao` chama `LeituraSituacao.carregar` e depois `RecortePorPapel.recortar`. Nenhuma outra classe lê a situação, nem o Controller nem a View. `ListarPainel`, que monta a tela inicial, também não lê a situação direto: pega os ids em `LeituraSituacao.listarCandidaturas` e passa cada um por `ConsultarSituacao`, mantendo o recorte num ponto só.
+
+`HomologarEstagio` usa `RepositorioProcesso.buscarEstagioDaCandidatura` para recusar a segunda homologação da mesma candidatura.
 
 O processo é identificado pela **candidatura**, não pelo estágio. O estudante e a concedente consultam o processo antes da homologação, quando o estágio ainda não existe. Depois, a mesma consulta já traz o estágio.
 
@@ -276,7 +281,7 @@ As classes abaixo não têm regra de negócio própria, mas aparecem nas assinat
 - `Vaga` cria `Candidatura` porque a contém (agregação).
 - `Estagio.homologar` é um método de fábrica que recebe a candidatura aceita e os tipos obrigatórios. Pelo Creator puro, a criadora seria a candidatura, que tem os dados iniciais. Isso faria o módulo Vagas depender de Estágio, ao contrário da ordem do processo (o estágio nasce da candidatura, não o inverso). A fábrica no próprio `Estagio` mantém a dependência numa só direção: Estágio → Vagas.
 
-**Controller.** No sentido GRASP, o controlador de cada operação do sistema é o **caso de uso**. Não há uma fachada única "SistemaEstagio", que acumularia as nove operações e os quatro atores.
+**Controller.** No sentido GRASP, o controlador de cada operação do sistema é o **caso de uso**. Não há uma fachada única "SistemaEstagio", que acumularia as dez operações e os quatro atores.
 
 O Controller do MVC é outra coisa: é a borda da interface com o usuário. Ele recebe a requisição e delega ao caso de uso, sem coordenar a operação. Assim a regra da operação não fica presa à tela, e o mesmo caso de uso atende uma tela e um teste.
 
@@ -350,7 +355,7 @@ Qualquer `RepositorioProcesso` deve gravar a raiz inteira (estágio com document
 
 **I (Segregação de interfaces).**
 
-- `ConsultarSituacao` depende só de `LeituraSituacao`.
+- `ConsultarSituacao` e `ListarPainel` dependem só de `LeituraSituacao` (e `ListarPainel`, de `ConsultarSituacao`).
 - Os casos de uso de escrita dependem de `RepositorioProcesso`.
 - As duas interfaces são implementadas pela **mesma** classe de infraestrutura sobre o **mesmo** armazenamento. A separação é de interface, não de dados, então não contradiz o repositório único do [ADR-02](adr/ADR-02.md).
 - `Notificador` tem um método só.
