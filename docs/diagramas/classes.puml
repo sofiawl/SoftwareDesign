@@ -9,6 +9,7 @@ skinparam shadowing false
 skinparam nodesep 60
 skinparam ranksep 80
 skinparam ClassBorderColor #333333
+skinparam ClassBackgroundColor<<apresentacao>> #F2F2F2
 skinparam ClassBackgroundColor<<app>> #DCE8FF
 skinparam ClassBackgroundColor<<contrato>> #D5F2DC
 skinparam ClassBackgroundColor<<dominio>> #FFE9C7
@@ -17,12 +18,17 @@ hide stereotype
 hide empty members
 hide circle
 
+' ---------- Apresentação (MVC) ----------
+class EstagioController <<apresentacao>> {
+  +homologar(requisicao)
+}
+
 ' ---------- Aplicação ----------
 class HomologarEstagio <<app>> {
   +executar(solicitante, candidaturaId, orientadorId)
 }
 
-' ---------- Contratos (interfaces estáveis) ----------
+' ---------- Interfaces (estáveis) ----------
 interface PoliticaEstagio <<contrato>> {
   +documentosObrigatorios()
   +podeDecidir(etapa, papel)
@@ -70,10 +76,15 @@ class Candidatura <<dominio>> {
   +estaAceita()
 }
 
-' ---------- Implementações (fora do núcleo) ----------
-class PoliticaRegulamentoVigente <<infra>>
+' ---------- Implementação de regra (domínio) ----------
+class PoliticaRegulamentoVigente <<dominio>>
+
+' ---------- Infraestrutura ----------
 class RepositorioPersistente <<infra>>
 class NotificadorSimulado <<infra>>
+
+' ---------- Controller delega ao caso de uso ----------
+EstagioController ..> HomologarEstagio
 
 ' ---------- Dependências do caso de uso ----------
 HomologarEstagio ..> PoliticaEstagio
@@ -95,7 +106,7 @@ Vaga "1" *-- "0..*" Candidatura
 Estagio ..> Candidatura
 
 legend right
-  Azul: aplicação | Verde: contratos (interfaces)
-  Laranja: domínio | Roxo: implementações
+  Cinza: apresentação (MVC) | Azul: aplicação
+  Verde: interfaces | Laranja: domínio | Roxo: infraestrutura
 endlegend
 @enduml
