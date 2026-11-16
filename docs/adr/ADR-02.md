@@ -4,7 +4,7 @@ Status: aceita
 
 ## Contexto
 
-O [ADR-01](ADR-01.md) deixou o armazenamento fora do núcleo. Não disse o que acontece com o processo depois de cada ato. A candidatura é aceita, a coordenação homologa, o documento volta recusado, e meses depois o estudante lança mais uma atividade no mesmo estágio. O orientador não lê a saída da última etapa. Lê a situação de agora ([RF07](../requisitos.md)).
+O [ADR-01](ADR-01.md) deixou o armazenamento na camada de infraestrutura, atrás de uma interface da aplicação. Não disse o que acontece com o processo depois de cada ato. A candidatura é aceita, a coordenação homologa, o documento volta recusado, e meses depois o estudante lança mais uma atividade no mesmo estágio. O orientador não lê a saída da última etapa. Lê a situação de agora ([RF07](../requisitos.md)).
 
 ## Problema e forças
 
@@ -15,9 +15,9 @@ O [ADR-01](ADR-01.md) deixou o armazenamento fora do núcleo. Não disse o que a
 
 ## Alternativas consideradas
 
-**Pipes and filters.** Cada ato é um filtro: candidatura, homologação, documentos, atividades, encerramento. A saída de um entra no próximo. O fluxo parece isso, porque a homologação só vem depois da candidatura aceita. Não é isso no uso. A atividade não é a saída da homologação: o estudante acrescenta outra no mesmo estágio, meses depois. O documento recusado não avança: volta a pendente. A concedente e o orientador não consomem a saída de um filtro. Precisam do processo como ele está.
+**Pipes and filters.** Cada ato é um filtro: candidatura, homologação, documentos, atividades, encerramento. A saída de um entra no próximo. O fluxo parece isso, porque a homologação só vem depois da candidatura aceita. Não é isso no uso. A atividade não é a saída da homologação: o estudante acrescenta outra no mesmo estágio, meses depois. O documento recusado não avança: fica recusado, com o motivo, até o estudante entregar de novo. A concedente e o orientador não consomem a saída de um filtro. Precisam do processo como ele está.
 
-**Arquitetura orientada a eventos.** Cada ato publica um fato, como candidatura aceita ou estágio homologado, e outro agente reage. O aviso ao estudante seria um assinante. A coordenação não homologa por isso: ela lê a candidatura aceita, escolhe o orientador e só então grava o estágio. A atividade, meses depois, também não reage a estágio homologado. Ela lê o estado em andamento. O fato serve ao aviso, e esse aviso é a porta do [ADR-03](ADR-03.md). No núcleo, o ato seguinte continuaria dependendo do registro, com chamada local entre módulos, como no [ADR-01](ADR-01.md).
+**Arquitetura orientada a eventos.** Cada ato publica um fato, como candidatura aceita ou estágio homologado, e outro agente reage. O aviso ao estudante seria um assinante. A coordenação não homologa por isso: ela lê a candidatura aceita, escolhe o orientador e só então grava o estágio. A atividade, meses depois, também não reage a estágio homologado. Ela lê o estado em andamento. O fato serve ao aviso, e esse aviso é a interface de notificação do [ADR-03](ADR-03.md). No domínio, o ato seguinte continuaria dependendo do registro, com chamada local entre módulos, como no [ADR-01](ADR-01.md).
 
 **Repository.** Um registro do processo no centro. Candidatar, homologar, entregar documento, lançar atividade e encerrar leem esse registro, aplicam a regra e gravam de volta. Ninguém passa o processo adiante. A situação é o próprio registro. Termo, plano, relatório e um relatório parcial futuro são itens com tipo e estado ali, não filtros novos.
 
@@ -27,7 +27,9 @@ Adotar o estilo repository para o processo de estágio.
 
 O registro guarda a vaga, as candidaturas e, quando passa a existir, o estágio: orientador, documentos, atividades e encerramento. Documento e atividade não formam outro repositório. Mudam o mesmo processo.
 
-O acesso continua pela porta do ADR-01. Este ADR não escolhe produto de banco. Escolhe que existe um estado só, e que cada ato depende dele.
+No domínio, o registro tem duas raízes: `Vaga`, com as candidaturas, e `Estagio`, com documentos e atividades ([modelo de domínio](../modelo-dominio.md)). Cada ato carrega e grava só a raiz que altera; a consulta de situação lê as duas juntas.
+
+O acesso é pela interface `RepositorioProcesso`, definida na camada de aplicação e implementada na infraestrutura ([ADR-01](ADR-01.md)). Este ADR não escolhe produto de banco. Escolhe que existe um estado só, e que cada ato depende dele.
 
 ## Consequências positivas
 
