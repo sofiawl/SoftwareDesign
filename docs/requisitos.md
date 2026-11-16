@@ -38,17 +38,17 @@ Decisões em [docs/adr/](adr/).
 
 O sistema deve permitir incluir ou retirar um documento obrigatório, ou mudar quem aprova uma etapa, sem alterar candidatura, registro de atividade nem armazenamento.
 
-Por que influencia a arquitetura: o regulamento muda o que a coordenação exige no processo (termo de compromisso, plano de atividades, relatório, e depois um relatório parcial) e quem decide cada etapa (a concedente na candidatura, a coordenação na homologação). Se essa lista morar em candidatar, entregar documento, encerrar e em colunas fixas do banco, um documento novo altera os quatro lugares. A decisão é uma política só, no núcleo. Os casos de uso perguntam quais documentos são obrigatórios e quem pode aprovar. No processo, cada documento é um item com tipo e estado, não uma etapa nova ([ADR-02](adr/ADR-02.md)).
+Por que influencia a arquitetura: o regulamento muda o que a coordenação exige no processo (termo de compromisso, plano de atividades, relatório, e depois um relatório parcial) e quem decide cada etapa (a concedente na candidatura, a coordenação na homologação). Se essa lista morar em candidatar, entregar documento, encerrar e em colunas fixas do banco, um documento novo altera os quatro lugares. A decisão é uma política só, no domínio. Os casos de uso perguntam quais documentos são obrigatórios e quem pode aprovar. No processo, cada documento é um item com tipo e estado, não uma etapa nova ([ADR-02](adr/ADR-02.md)).
 
-A política fica no núcleo e o banco fica fora, senão o relatório parcial atravessa candidatura, entrega, encerramento e o esquema. [ADR-01](adr/ADR-01.md).
+A política fica no domínio e o banco fica na infraestrutura, atrás de uma interface, senão o relatório parcial atravessa candidatura, entrega, encerramento e o esquema. [ADR-01](adr/ADR-01.md).
 
 ### ASR2
 
 O sistema deve permitir trocar o canal do aviso do RF09 (simulado, e-mail, REST ou SOAP) sem alterar o registro da decisão.
 
-Por que influencia a arquitetura: o estudante é avisado quando a candidatura é aceita ou recusada, quando o estágio é homologado, quando um documento é recusado e quando o estágio é encerrado. O protótipo não fala com o serviço da instituição (RNF04). Se homologar, recusar e encerrar abrirem a conexão HTTP, trocar o simulado por e-mail reescreve os três casos de uso. A decisão de negócio já está gravada (RNF03): a concedente aceitou, ou a coordenação homologou, mesmo que o aviso não saia.
+Por que influencia a arquitetura: o estudante é avisado quando a candidatura é aceita ou recusada, quando o estágio é homologado, quando um documento é recusado e quando o estágio é encerrado. O protótipo não fala com o serviço da instituição (RNF04). Se decidir a candidatura, homologar, recusar documento e encerrar abrirem a conexão HTTP, trocar o simulado por e-mail reescreve os quatro casos de uso. A decisão de negócio já está gravada (RNF03): a concedente aceitou, ou a coordenação homologou, mesmo que o aviso não saia.
 
-A decisão é uma porta de aviso, chamada depois de gravar. O caso de uso não conhece o canal. O adaptador desta entrega é o simulado. [ADR-03](adr/ADR-03.md).
+A decisão é uma interface de aviso (`Notificador`), chamada depois de gravar. O caso de uso não conhece o canal. A implementação desta entrega é a simulada. [ADR-03](adr/ADR-03.md).
 
 ### ASR3
 
@@ -56,4 +56,4 @@ O sistema deve aplicar o RNF01 uma única vez, na consulta do RF07.
 
 Por que influencia a arquitetura: a situação do estágio junta vaga, candidatura, homologação, orientador, documentos e atividades. Os quatro papéis do RNF01 não veem o mesmo recorte. A concedente precisa do nome de quem se candidatou à vaga dela, e não vê atividade de um estágio em outra concedente nem documento de um processo que não é seu. O orientador vê documentos e atividades dos estágios que orienta, não o conjunto da coordenação. O estudante vê só o próprio processo. Se cada tela, cada serviço ou cada leitura direta ao banco aplicar o próprio filtro, um deles entrega documento ou atividade a mais.
 
-A decisão é um ponto só, na entrada da consulta: a leitura junta os dados e o RNF01 corta o resultado. Isso precisa acontecer no mesmo processo. Se cada tela ou cada ator ler o banco por conta própria, o recorte diverge. [ADR-01](adr/ADR-01.md).
+A decisão é um ponto só, no caso de uso da consulta: a leitura junta os dados e o RNF01 corta o resultado, no domínio. Isso precisa acontecer no mesmo processo. O Controller e a View recebem só o resultado já recortado e não filtram nada. Se cada tela ou cada ator ler o banco por conta própria, o recorte diverge. [ADR-01](adr/ADR-01.md).
