@@ -39,4 +39,5 @@ Documentos que estavam vazios ou não existiam, escritos já com o vocabulário 
 
 | Arquivo | Conteúdo | Commit |
 |---|---|---|
-| `arquitetura.md` | Proposta arquitetural: camadas, módulos, estrutura de pastas, interfaces com contrato, comunicação, persistência (SQLite e esquema), integrações externas, decisões de comunicação, rotas HTTP e rastreabilidade dos ASRs. | este commit |
+| `arquitetura.md` | Proposta arquitetural: camadas, módulos, estrutura de pastas, interfaces com contrato, comunicação, persistência (SQLite e esquema), integrações externas, decisões de comunicação, rotas HTTP e rastreabilidade dos ASRs. | `5b9548b` |
+| `tradeoffs.md` | Comparação da arquitetura escolhida com camadas sem módulos, microsserviços e hexagonal, nos nove critérios do enunciado, com justificativa por critério e a decisão. | este commit |
