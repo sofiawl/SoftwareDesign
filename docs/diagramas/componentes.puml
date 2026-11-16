@@ -1,53 +1,73 @@
 @startuml componentes
-title Diagrama de componentes - Gerenciamento de estágios
+title Diagrama de componentes - Gerenciamento de estágios\n(monólito modular em camadas com MVC)
 skinparam componentStyle uml2
 skinparam linetype ortho
+skinparam packageStyle rectangle
 
-component "Interface / Entrada\n(telas, API do protótipo)" as Entrada
-component "Composição (Main)\nescolhe os adaptadores" as Main
+component "Composição (Main)\nescolhe as implementações\ne monta os Controllers" as Main
 
-package "Camada de aplicação" {
-  component "Casos de uso\nCadastrarVaga, Candidatar, DecidirCandidatura,\nHomologarEstagio, EntregarDocumento, RecusarDocumento,\nRegistrarAtividade, EncerrarEstagio, ConsultarSituacao" as UC
+package "Apresentação (MVC)" {
+  component "Controllers\nVagaController, EstagioController,\nAcompanhamentoController, SituacaoController" as Ctrl
+  component "Views\ntelas de vaga, candidatura,\nestágio e situação" as Views
 }
 
-package "Núcleo" {
+package "Aplicação" {
+  component "Casos de uso\nCadastrarVaga, Candidatar, DecidirCandidatura,\nHomologarEstagio, EntregarDocumento, RecusarDocumento,\nRegistrarAtividade, EncerrarEstagio, ConsultarSituacao" as UC
+  component "Interfaces\nRepositorioProcesso, LeituraSituacao, Notificador,\nAviso, TipoEvento, ResultadoAviso, AvisoPendente" as Intf
+}
+
+package "Domínio" {
   component "Vagas\nVaga, Candidatura" as Vagas
   component "Estágio\nEstagio" as Estagio
   component "Acompanhamento\nDocumento, Atividade" as Acomp
-  component "Política de estágio\nPoliticaEstagio, RecortePorPapel, TipoDocumento,\nSituacaoProcesso, SituacaoVisivel" as Pol
-  component "Portas\nRepositorioProcesso, LeituraSituacao,\nNotificador, Aviso" as Portas
+  component "Política de estágio\nPoliticaEstagio, PoliticaRegulamentoVigente,\nRecortePorPapel, TipoDocumento,\nSituacaoProcesso, SituacaoVisivel" as Pol
 }
 
-package "Adaptadores (fora do núcleo)" {
+package "Infraestrutura" {
   component "RepositorioPersistente\n(RNF02)" as Repo
   component "NotificadorSimulado\n(RNF04)" as Notif
 }
 
-Entrada --> UC
-Main --> UC
-Main ..> Repo : <<instancia>>
-Main ..> Notif : <<instancia>>
+' ---------- Apresentação -> Aplicação ----------
+Ctrl --> UC : chama um caso de uso
+Ctrl --> Views : escolhe e entrega\nSituacaoVisivel
 
+' ---------- Aplicação -> Domínio ----------
+UC --> Intf
 UC --> Vagas
 UC --> Estagio
 UC --> Acomp
 UC --> Pol
-UC --> Portas
+Intf --> Vagas
+Intf --> Estagio
+Intf --> Pol
 
+' ---------- Dentro do Domínio ----------
 Estagio --> Vagas
 Estagio --> Acomp
 Estagio --> Pol
 Acomp --> Pol
-Portas --> Vagas
-Portas --> Estagio
-Portas --> Pol
 
-Repo ..> Portas : <<implementa>>\nRepositorioProcesso,\nLeituraSituacao
-Notif ..> Portas : <<implementa>>\nNotificador
+' ---------- Infraestrutura implementa a Aplicação ----------
+Repo ..> Intf : <<implementa>>\nRepositorioProcesso,\nLeituraSituacao
+Notif ..> Intf : <<implementa>>\nNotificador
 
-note bottom of Portas
-  O núcleo não depende de nenhum adaptador.
-  Vagas e Política não dependem de ninguém.
+' ---------- Composição ----------
+Main ..> Ctrl : <<instancia>>
+Main ..> Repo : <<instancia>>
+Main ..> Notif : <<instancia>>
+
+note right of Ctrl
+  Controller sem regra de negócio:
+  não acessa o repositório nem a política.
+  View exibe só o que recebe (RNF01).
+end note
+
+note bottom of Repo
+  Cada camada só chama a de baixo.
+  A infraestrutura implementa interfaces
+  definidas na aplicação (inversão de dependência).
+  Domínio não depende de nenhuma outra camada.
   Não há ciclo entre componentes.
 end note
 @enduml
