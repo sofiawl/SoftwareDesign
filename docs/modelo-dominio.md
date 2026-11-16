@@ -249,7 +249,7 @@ As classes abaixo não têm regra de negócio própria, mas aparecem nas assinat
 | `TipoEvento` | enumeração | aplicação | Os cinco eventos do RF09. É enumerado para os casos de uso não montarem texto livre. |
 | `ResultadoAviso` | objeto de valor | aplicação | `sucesso` ou `falha(motivo)`. Sem exceção, para o caso de uso decidir o aviso pendente. |
 | `AvisoPendente` | registro persistido | aplicação | Guardar o aviso que falhou (evento, referência, destinatário, motivo da falha, data) para nova tentativa (RNF03). |
-| `SituacaoProcesso` | modelo de leitura | aplicação | A situação completa do RF07: vaga, candidatura e, se houver, estágio com orientador, documentos e atividades. Só `LeituraSituacao` produz, só `RecortePorPapel` consome. |
+| `SituacaoProcesso` | modelo de leitura | política | A situação completa do RF07: vaga, candidatura e, se houver, estágio com orientador, documentos e atividades. Só `LeituraSituacao` produz, só `RecortePorPapel` consome. |
 | `SituacaoVisivel` | modelo de leitura | política | O resultado do recorte: o que o solicitante pode ver, ou `AcessoNegado`. É o que o Controller entrega à View. |
 
 ### O que ficou fora do modelo, e por quê
