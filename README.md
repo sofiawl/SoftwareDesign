@@ -5,11 +5,15 @@ estágio.
 
 **Como este sistema deve ser organizado para atender aos requisitos atuais e permitir sua evolução sem gerar dependências desnecessárias?**
 
+**Arquitetura escolhida:** monólito modular em camadas com MVC ([ADR-01](docs/adr/ADR-01.md)). Camadas apresentação (MVC), aplicação, domínio e infraestrutura; módulos Vagas, Estágio, Acompanhamento e Política de estágio.
+
+As correções feitas para alinhar os documentos entre si estão em [docs/historico-alteracoes.md](docs/historico-alteracoes.md).
+
 ## O que não pode faltar na entrega
 - [ ] documentações do projeto
 - [ ] diagramas
 - [ ] registros e decisões arquiteturais
-- [ ] coódigo-fonte
+- [ ] código-fonte
 - [ ] testes
 - [ ] protótipo executável
 
@@ -79,12 +83,12 @@ estágio.
 - ADRs: [docs/adr/](docs/adr/)
 
 ### Alex
-- Modelo de domínio e responsabilidades
-- Análise de evolução
+- Modelo de domínio e responsabilidades: [docs/modelo-dominio.md](docs/modelo-dominio.md)
+- Análise de evolução: [docs/evolucao.md](docs/evolucao.md)
 
 ### Mayara
-- Modelagem UML
-- Alternativas e trade-offs
+- Modelagem UML: [docs/diagramas/](docs/diagramas/)
+- Alternativas e trade-offs: [docs/tradeoffs.md](docs/tradeoffs.md)
 
 ### Gabriel
-- Proposta arquitetural
+- Proposta arquitetural: [docs/arquitetura.md](docs/arquitetura.md)
