@@ -1,10 +1,10 @@
 @startuml componentes
 title Diagrama de componentes - Gerenciamento de estágios\n(monólito modular em camadas com MVC)
 skinparam componentStyle uml2
-skinparam linetype ortho
 skinparam packageStyle rectangle
-
-component "Composição (Main)\nescolhe as implementações\ne monta os Controllers" as Main
+skinparam nodesep 40
+skinparam ranksep 60
+top to bottom direction
 
 package "Apresentação (MVC)" {
   component "Controllers\nVagaController, EstagioController,\nAcompanhamentoController, SituacaoController" as Ctrl
@@ -28,46 +28,41 @@ package "Infraestrutura" {
   component "NotificadorSimulado\n(RNF04)" as Notif
 }
 
+component "Composição (Main)\nescolhe as implementações\ne monta os Controllers" as Main
+
 ' ---------- Apresentação -> Aplicação ----------
-Ctrl --> UC : chama um caso de uso
-Ctrl --> Views : escolhe e entrega\nSituacaoVisivel
+Ctrl -right-> Views : escolhe e entrega\nSituacaoVisivel
+Ctrl -down-> UC : chama um\ncaso de uso
 
 ' ---------- Aplicação -> Domínio ----------
-UC --> Intf
-UC --> Vagas
-UC --> Estagio
-UC --> Acomp
-UC --> Pol
-Intf --> Vagas
-Intf --> Estagio
-Intf --> Pol
+UC -right-> Intf
+UC -down-> Vagas
+UC -down-> Estagio
+UC -down-> Acomp
+UC -down-> Pol
+Intf -down-> Vagas
+Intf -down-> Estagio
+Intf -down-> Pol
 
 ' ---------- Dentro do Domínio ----------
-Estagio --> Vagas
-Estagio --> Acomp
-Estagio --> Pol
-Acomp --> Pol
+Estagio -left-> Vagas
+Estagio -down-> Acomp
+Estagio -down-> Pol
+Acomp -right-> Pol
 
 ' ---------- Infraestrutura implementa a Aplicação ----------
-Repo ..> Intf : <<implementa>>\nRepositorioProcesso,\nLeituraSituacao
-Notif ..> Intf : <<implementa>>\nNotificador
+Repo .up.> Intf : <<implementa>>\nRepositorioProcesso,\nLeituraSituacao
+Notif .up.> Intf : <<implementa>>\nNotificador
 
 ' ---------- Composição ----------
-Main ..> Ctrl : <<instancia>>
-Main ..> Repo : <<instancia>>
-Main ..> Notif : <<instancia>>
+Main .up.> Repo : <<instancia>>
+Main .up.> Notif : <<instancia>>
+Main .up.> Ctrl : <<instancia>>
 
-note right of Ctrl
-  Controller sem regra de negócio:
-  não acessa o repositório nem a política.
-  View exibe só o que recebe (RNF01).
-end note
-
-note bottom of Repo
+legend bottom
   Cada camada só chama a de baixo.
-  A infraestrutura implementa interfaces
-  definidas na aplicação (inversão de dependência).
-  Domínio não depende de nenhuma outra camada.
-  Não há ciclo entre componentes.
-end note
+  A infraestrutura implementa interfaces definidas na aplicação (inversão de dependência).
+  O domínio não depende de nenhuma outra camada. Não há ciclo entre componentes.
+  Controller sem regra de negócio: não acessa o repositório nem a política. View exibe só o que recebe (RNF01).
+endlegend
 @enduml
