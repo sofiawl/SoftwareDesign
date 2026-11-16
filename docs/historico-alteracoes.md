@@ -32,6 +32,7 @@ Estes termos passam a valer em todos os documentos:
 | 8 | `diagramas/sequencia.puml`, `sequencia.png` | Entram `EstagioController` e `View`: o fluxo começa no Controller, que monta o `Solicitante`, e os três finais (erro, sucesso, aviso pendente) voltam pela View. `podeDecidir` passa a receber `solicitante.papel` em vez do papel fixo. PNG adicionado. | O ator chamava o caso de uso direto, sem a camada MVC, e o papel fixo esvaziava a checagem de permissão. | `8eec452` |
 | 9 | `diagramas/comunicacao.md` | Ganha título. Entram `SituacaoController` e `TelaSituacao`. Retornos passam a ir na própria mensagem (`x := op()`) e a numeração aninhada (1.1.1, 1.1.2) mostra que o caso de uso chama leitura e recorte. Cada objeto indica a camada. Texto diz que Controller e View não filtram. | Sem título e sem a camada MVC; retornos numerados como mensagens. | `240b9f5` |
 | 10 | `README.md` | Informa a arquitetura escolhida logo após a pergunta central, com link para o ADR-01 e para este histórico. Separação de tarefas ganha links para os documentos de cada integrante. Corrige "coódigo-fonte". | O README não dizia qual arquitetura foi escolhida e só parte das tarefas apontava para seus arquivos. | `3bb7385` |
+| 11 | `arquitetura.md`, `prototipo.md` | Entram o que o protótipo precisou e o documento não listava: `ListarPainel` e a rota `GET /`, rotas de login e logout, `buscarEstagioDaCandidatura`, `listarVagas`, `listarCandidaturas` e `CadastroUsuarios` em `infraestrutura/identidade/`. Árvore de pastas atualizada (`main.py`, arquivos de apoio da aplicação). A frase sobre permissão passa a dizer que, fora das quatro etapas da política, o caso de uso confere papel e vínculo. | Manter a proposta arquitetural igual ao código. A frase antiga dizia que toda checagem passava por `podeDecidir`, o que não valia para as operações do estudante e da concedente. | `abd7830` |
 
 ## Documentos criados
 
@@ -41,4 +42,17 @@ Documentos que estavam vazios ou não existiam, escritos já com o vocabulário 
 |---|---|---|
 | `arquitetura.md` | Proposta arquitetural: camadas, módulos, estrutura de pastas, interfaces com contrato, comunicação, persistência (SQLite e esquema), integrações externas, decisões de comunicação, rotas HTTP e rastreabilidade dos ASRs. | `5b9548b` |
 | `tradeoffs.md` | Comparação da arquitetura escolhida com camadas sem módulos, microsserviços e hexagonal, nos nove critérios do enunciado, com justificativa por critério e a decisão. | `924361f` |
-| `evolucao.md` | Análise de evolução: notificador para e-mail, SQLite para PostgreSQL, relatório parcial (ASR1, com a decisão de não retroagir) e nova API REST; elementos afetados e inalterados e decisões que ajudam ou dificultam. | este commit |
+| `evolucao.md` | Análise de evolução: notificador para e-mail, SQLite para PostgreSQL, relatório parcial (ASR1, com a decisão de não retroagir) e nova API REST; elementos afetados e inalterados e decisões que ajudam ou dificultam. | `14d51c7` |
+
+## Protótipo
+
+Código em `src/` e testes em `tests/`, seguindo a [proposta arquitetural](arquitetura.md). Como executar e roteiro de demonstração em [prototipo.md](prototipo.md).
+
+| Commit | Conteúdo |
+|---|---|
+| `7739b20` | Domínio: `Vaga`, `Candidatura`, `Estagio`, `Documento`, `Atividade`, `PoliticaEstagio`, `RecortePorPapel` e modelos de leitura. Não importa nenhuma outra camada. |
+| `eb116b9` | Aplicação: os nove casos de uso, `ListarPainel`, as interfaces `RepositorioProcesso`, `LeituraSituacao` e `Notificador`, e o aviso depois de gravar com `AvisoPendente`. |
+| `843f1ee` | Infraestrutura: `RepositorioPersistente` sobre SQLite (esquema da arquitetura), `NotificadorSimulado` que pode falhar e `CadastroUsuarios`. |
+| `11a8cef` | Apresentação MVC (Controllers, Views, sessão e servidor HTTP) e composição em `main.py`. |
+| `b58dcf1` | Testes: domínio, política, casos de uso com dublês, contratos (dublê e implementação real), rotas HTTP e direção das dependências entre camadas. |
+| `5673df0` | README com instruções de execução, `prototipo.md` e `.gitignore`. |
