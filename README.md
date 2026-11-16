@@ -9,6 +9,18 @@ estágio.
 
 As correções feitas para alinhar os documentos entre si estão em [docs/historico-alteracoes.md](docs/historico-alteracoes.md).
 
+## Como executar o protótipo
+
+Requer só Python 3.10 ou mais novo; não há dependência para instalar.
+
+```bash
+python3 src/main.py                 # http://127.0.0.1:8000
+python3 src/main.py --falhar-aviso  # o aviso simulado falha (demonstra o RNF03)
+python3 -m unittest discover -s tests -t .
+```
+
+Opções: `--porta`, `--host` e `--banco` (arquivo SQLite, padrão `estagios.db`). O login é simples, sem senha: escolha um dos usuários de exemplo (concedentes, estudantes, coordenação e orientadores). Um roteiro de demonstração está em [docs/prototipo.md](docs/prototipo.md).
+
 ## O que não pode faltar na entrega
 - [ ] documentações do projeto
 - [ ] diagramas
