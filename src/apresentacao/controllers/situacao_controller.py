@@ -2,8 +2,8 @@ from aplicacao.situacao.consultar_situacao import ConsultarSituacao
 from aplicacao.situacao.listar_painel import ListarPainel
 from apresentacao.controllers.base import controller
 from apresentacao.views import erros as view_erros
-from apresentacao.views import painel as view_painel
-from apresentacao.views import situacao as view_situacao
+from apresentacao.views.situacao import painel as view_painel
+from apresentacao.views.situacao import tela as view_situacao
 from dominio.politica.situacao import AcessoNegado
 from apresentacao.web import Resposta
 

@@ -50,9 +50,10 @@ As pastas seguem primeiro a camada e, dentro dela, o módulo. A camada vem prime
 ```
 src/
 ├── apresentacao/
-│   ├── controllers/     VagaController, EstagioController,
+│   ├── controllers/     LoginController, VagaController, EstagioController,
 │   │                    AcompanhamentoController, SituacaoController
-│   └── views/           vagas/, estagio/, acompanhamento/, situacao/
+│   ├── sessao.py, web.py  identificação do solicitante e servidor HTTP
+│   └── views/           layout, erros, login; vagas/, estagio/, acompanhamento/, situacao/
 ├── aplicacao/
 │   ├── vagas/           CadastrarVaga, Candidatar, DecidirCandidatura
 │   ├── estagio/         HomologarEstagio, EncerrarEstagio
@@ -191,7 +192,7 @@ Como o Controller traduz o resultado do caso de uso:
 
 | Resultado | Status | View |
 |---|---|---|
-| sucesso | `303` para a tela da situação | situação atualizada |
+| sucesso | `303` para a tela da situação, ou para o painel ao cadastrar vaga | situação atualizada, ou o painel |
 | sucesso com `avisoPendente = true` | `303` para a tela da situação | situação atualizada e alerta "aviso ao estudante pendente" |
 | dados inválidos (motivo vazio, carga horária não positiva) | `400` | formulário com a mensagem |
 | papel sem permissão para a etapa | `403` | página de acesso negado |

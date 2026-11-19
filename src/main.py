@@ -52,6 +52,9 @@ def montar(caminho_banco: str, falhar_aviso: bool = False):
     if not repositorio.listar_vagas():
         repositorio.salvar_vaga(Vaga.cadastrar(
             "alfa", "Desenvolvimento web", 20, "2027/1", "Python ou JavaScript"))
+        encerrada = Vaga.cadastrar("beta", "Análise de dados", 30, "2027/2", "Estatística")
+        encerrada.encerrar()
+        repositorio.salvar_vaga(encerrada)
 
     sessao = Sessao(cadastro.buscar, cadastro.listar)
     login = LoginController(sessao)

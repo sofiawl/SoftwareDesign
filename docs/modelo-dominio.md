@@ -227,7 +227,7 @@ Cada operação do sistema é uma classe com um método `executar`:
 
 Roteiro comum dos casos de uso que alteram estado:
 
-1. perguntar à política se o papel pode decidir a etapa;
+1. conferir a permissão, pela política (`podeDecidir`) nas quatro etapas de decisão e pelo papel e pelo vínculo nas demais operações;
 2. carregar a raiz pelo repositório;
 3. chamar o método de domínio (a regra está nele);
 4. gravar;

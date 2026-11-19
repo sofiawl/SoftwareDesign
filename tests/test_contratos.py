@@ -3,9 +3,10 @@
 import os
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, datetime
 
 from aplicacao.erros import NaoEncontrado
+from aplicacao.interfaces.aviso_pendente import AvisoPendente
 from aplicacao.interfaces.notificador import Aviso, ResultadoAviso, TipoEvento
 from dominio.estagio.estagio import Estagio
 from dominio.politica.tipo_documento import RELATORIO, TERMO_COMPROMISSO
@@ -70,10 +71,28 @@ class ContratoRepositorio:
         self.assertEqual([v.id for v in self.repo.listar_vagas()], [vaga.id])
         self.assertEqual(self.repo.listar_candidaturas(), [c.id])
 
+    def ler_avisos_pendentes(self):
+        raise NotImplementedError
+
+    def test_aviso_pendente_gravado(self):
+        aviso = Aviso("ana", TipoEvento.ESTAGIO_HOMOLOGADO, "e1")
+        self.repo.salvar_aviso_pendente(aviso, "canal fora")
+        pendentes = self.ler_avisos_pendentes()
+        self.assertEqual(len(pendentes), 1)
+        pendente = pendentes[0]
+        self.assertIsInstance(pendente, AvisoPendente)
+        self.assertEqual(pendente.aviso, aviso)
+        self.assertEqual(pendente.motivo_falha, "canal fora")
+        self.assertIsInstance(pendente.criado_em, datetime)
+        self.assertLess(abs((datetime.now() - pendente.criado_em).total_seconds()), 5)
+
 
 class TestContratoEmMemoria(ContratoRepositorio, unittest.TestCase):
     def novo_repositorio(self):
         return RepositorioEmMemoria()
+
+    def ler_avisos_pendentes(self):
+        return list(self.repo.avisos_pendentes)
 
 
 class TestContratoPersistente(ContratoRepositorio, unittest.TestCase):
@@ -87,6 +106,13 @@ class TestContratoPersistente(ContratoRepositorio, unittest.TestCase):
     def tearDown(self):
         self._dir.cleanup()
 
+    def ler_avisos_pendentes(self):
+        with Banco(self.caminho).conexao() as con:
+            linhas = con.execute("SELECT * FROM aviso_pendente ORDER BY id").fetchall()
+        return [AvisoPendente(
+            Aviso(l["destinatario_id"], TipoEvento(l["tipo_evento"]), l["referencia_id"], l["motivo"]),
+            l["motivo_falha"], datetime.fromisoformat(l["criado_em"])) for l in linhas]
+
     def test_dados_sobrevivem_ao_reinicio(self):  # RNF02
         vaga, c = self._vaga_com_candidatura()
         e = Estagio.homologar(c, "carla", [RELATORIO])
@@ -94,14 +120,6 @@ class TestContratoPersistente(ContratoRepositorio, unittest.TestCase):
         reiniciado = RepositorioPersistente(Banco(self.caminho))
         self.assertEqual(reiniciado.buscar_vaga(vaga.id), vaga)
         self.assertEqual(reiniciado.buscar_estagio(e.id), e)
-
-    def test_aviso_pendente_gravado(self):  # RNF03
-        self.repo.salvar_aviso_pendente(
-            Aviso("ana", TipoEvento.ESTAGIO_HOMOLOGADO, "e1"), "canal fora")
-        with Banco(self.caminho).conexao() as con:
-            linha = con.execute("SELECT * FROM aviso_pendente").fetchone()
-        self.assertEqual((linha["tipo_evento"], linha["motivo_falha"]),
-                         ("ESTAGIO_HOMOLOGADO", "canal fora"))
 
     def test_salvar_estagio_e_tudo_ou_nada(self):
         _, c = self._vaga_com_candidatura()

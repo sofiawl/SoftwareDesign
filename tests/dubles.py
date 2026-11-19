@@ -1,8 +1,10 @@
 """Dublês da aplicação: repositório em memória e notificador que conta e falha sob comando."""
 
 import copy
+from datetime import datetime
 
 from aplicacao.erros import NaoEncontrado
+from aplicacao.interfaces.aviso_pendente import AvisoPendente
 from aplicacao.interfaces.leitura_situacao import LeituraSituacao
 from aplicacao.interfaces.notificador import Aviso, Notificador, ResultadoAviso
 from aplicacao.interfaces.repositorio_processo import RepositorioProcesso
@@ -18,7 +20,7 @@ class RepositorioEmMemoria(RepositorioProcesso, LeituraSituacao):
     def __init__(self):
         self.vagas = {}
         self.estagios = {}
-        self.avisos_pendentes: list[tuple[Aviso, str]] = []
+        self.avisos_pendentes: list[AvisoPendente] = []
 
     # cópias, para que alterar a entidade sem salvar não mude o "banco"
     def buscar_vaga(self, vaga_id):
@@ -50,7 +52,7 @@ class RepositorioEmMemoria(RepositorioProcesso, LeituraSituacao):
         self.estagios[estagio.id] = copy.deepcopy(estagio)
 
     def salvar_aviso_pendente(self, aviso, motivo_falha):
-        self.avisos_pendentes.append((aviso, motivo_falha))
+        self.avisos_pendentes.append(AvisoPendente(aviso, motivo_falha, datetime.now()))
 
     def carregar(self, candidatura_id):
         vaga = self.buscar_vaga_da_candidatura(candidatura_id)

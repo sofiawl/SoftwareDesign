@@ -3,6 +3,7 @@
 from datetime import date, datetime
 
 from aplicacao.erros import NaoEncontrado
+from aplicacao.interfaces.aviso_pendente import AvisoPendente
 from aplicacao.interfaces.leitura_situacao import LeituraSituacao
 from aplicacao.interfaces.notificador import Aviso
 from aplicacao.interfaces.repositorio_processo import RepositorioProcesso
@@ -109,13 +110,15 @@ class RepositorioPersistente(RepositorioProcesso, LeituraSituacao):
                     (a.id, estagio.id, a.data.isoformat(), a.descricao, a.carga_horaria))
 
     def salvar_aviso_pendente(self, aviso: Aviso, motivo_falha: str) -> None:
+        pendente = AvisoPendente(aviso, motivo_falha, datetime.now())
         with self._banco.conexao() as con:
             con.execute(
                 """INSERT INTO aviso_pendente (tipo_evento, referencia_id, destinatario_id, motivo,
                                                motivo_falha, criado_em)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (aviso.tipo_evento.value, aviso.referencia_id, aviso.destinatario_id,
-                 aviso.motivo, motivo_falha, datetime.now().isoformat(timespec="seconds")))
+                (pendente.aviso.tipo_evento.value, pendente.aviso.referencia_id,
+                 pendente.aviso.destinatario_id, pendente.aviso.motivo, pendente.motivo_falha,
+                 pendente.criado_em.isoformat(timespec="seconds")))
 
     def _montar_estagio(self, con, linha) -> Estagio:
         docs = con.execute(

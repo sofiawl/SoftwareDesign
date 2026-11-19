@@ -14,15 +14,18 @@ Implementação da [proposta arquitetural](arquitetura.md) em Python, só com a 
 
 ## Roteiro de demonstração
 
+Use um banco novo (apague `estagios.db` ou passe `--banco outro.db`): as vagas de exemplo, inclusive a vaga encerrada da Empresa Beta, só são criadas quando o banco não tem nenhuma vaga.
+
 1. `python3 src/main.py` e abrir <http://127.0.0.1:8000>.
-2. Entrar como **Ana Souza** (estudante) e clicar em *Candidatar-se*. Clicar de novo mostra o erro de candidatura duplicada.
-3. Entrar como **Coordenação** e abrir o processo: *Homologar* agora dá `409`, porque a candidatura não foi aceita.
-4. Entrar como **Empresa Alfa** e aceitar a candidatura. O terminal mostra o aviso simulado.
-5. Entrar como **Coordenação** e homologar com **Profa. Carla Dias**. Os três documentos obrigatórios da política aparecem pendentes.
-6. Como **Ana**: entregar documentos e registrar atividades.
-7. Como **Bruno Lima**: o painel não mostra o processo da Ana, e a URL direta dá acesso negado (RNF01).
-8. Como **Profa. Carla**: vê o estágio, mas não os dados da candidatura. Como **Prof. Diego**: acesso negado.
-9. Reiniciar com `python3 src/main.py --falhar-aviso`; como **Coordenação**, encerrar o estágio. O encerramento fica registrado e a tela mostra "aviso ao estudante pendente".
+2. Entrar como **Ana Souza** (estudante) e clicar em *Candidatar-se* na vaga da **Empresa Alfa**. Clicar de novo mostra o erro de candidatura duplicada.
+3. Ainda como **Ana**, candidatar-se à vaga encerrada da **Empresa Beta**. A resposta é `409`: a vaga está encerrada e não recebe candidaturas.
+4. Entrar como **Coordenação** e abrir o processo: *Homologar* agora dá `409`, porque a candidatura não foi aceita.
+5. Entrar como **Empresa Alfa** e aceitar a candidatura. O terminal mostra o aviso simulado.
+6. Entrar como **Coordenação** e homologar com **Profa. Carla Dias**. Os três documentos obrigatórios da política aparecem pendentes.
+7. Como **Ana**: entregar documentos e registrar atividades.
+8. Como **Bruno Lima**: o painel não mostra o processo da Ana, e a URL direta dá acesso negado (RNF01).
+9. Como **Profa. Carla**: vê o estágio, mas não os dados da candidatura. Como **Prof. Diego**: acesso negado.
+10. Reiniciar com `python3 src/main.py --falhar-aviso`; como **Coordenação**, encerrar o estágio. O encerramento fica registrado e a tela mostra "aviso ao estudante pendente".
 
 ## Testes
 

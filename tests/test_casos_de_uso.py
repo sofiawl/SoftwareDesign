@@ -129,10 +129,10 @@ class TestAvisoPendente(Base):  # RNF03, ADR-03
 
         self.assertTrue(resultado.aviso_pendente)
         self.assertTrue(self.repo.buscar_vaga_da_candidatura(cid).candidatura(cid).esta_aceita())
-        aviso, motivo = self.repo.avisos_pendentes[0]
-        self.assertEqual((aviso.tipo_evento, aviso.destinatario_id),
+        pendente = self.repo.avisos_pendentes[0]
+        self.assertEqual((pendente.aviso.tipo_evento, pendente.aviso.destinatario_id),
                          (TipoEvento.CANDIDATURA_ACEITA, "ana"))
-        self.assertTrue(motivo)
+        self.assertTrue(pendente.motivo_falha)
 
     def test_sucesso_nao_gera_pendente(self):
         cid = self.nova_candidatura()

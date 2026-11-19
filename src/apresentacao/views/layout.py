@@ -6,6 +6,15 @@ def e(valor) -> str:
     return escape("" if valor is None else str(valor))
 
 
+def form_acao(acao: str, rotulo: str, campos: str = "") -> str:
+    return (f'<form class="inline" method="post" action="{e(acao)}">{campos}'
+            f"<button>{e(rotulo)}</button></form>")
+
+
+def campo_motivo(rotulo: str) -> str:
+    return f'<input name="motivo" placeholder="{e(rotulo)}">'
+
+
 _CSS = """
 :root { --fundo:#f6f7f9; --cartao:#fff; --texto:#1d2330; --suave:#5d6677; --borda:#dde1e8;
         --primaria:#2457c5; --ok:#1d7f4e; --alerta:#a15c00; --erro:#b42318; }

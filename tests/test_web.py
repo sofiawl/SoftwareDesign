@@ -53,6 +53,15 @@ class TestWeb(unittest.TestCase):
         r = self._post(f"/vagas/{self._primeira_vaga()}/candidaturas", "ana")
         self.assertEqual(r.status, 409)
 
+    def test_vaga_encerrada_409(self):
+        corpo = self._get("/", "ana").corpo
+        trecho = corpo[corpo.index("ENCERRADA"):]
+        inicio = trecho.index('action="/vagas/') + len('action="/vagas/')
+        vaga_id = trecho[inicio:trecho.index("/", inicio)]
+        r = self._post(f"/vagas/{vaga_id}/candidaturas", "ana")
+        self.assertEqual(r.status, 409)
+        self.assertIn("A vaga está encerrada e não recebe candidaturas.", r.corpo)
+
     def test_homologar_nao_aceita_409(self):
         cid = self._candidatura()
         r = self._post(f"/candidaturas/{cid}/homologacao", "coord", orientador_id="carla")
