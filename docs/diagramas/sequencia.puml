@@ -22,6 +22,16 @@ UC -> Repo : buscarVagaDaCandidatura(candidaturaId)
 Repo --> UC : vaga
 UC -> Vaga : candidatura(candidaturaId)
 Vaga --> UC : candidatura
+UC -> Repo : buscarEstagioDaCandidatura(candidaturaId)
+
+break estágio já existe para a candidatura
+  Repo --> UC : estagio
+  UC --> Ctrl : RegraViolada "A candidatura já foi homologada."
+  Ctrl -> View : exibir erro (409)
+  View --> Coord : homologação recusada
+end
+
+Repo --> UC : nenhum
 UC -> Pol : documentosObrigatorios()
 Pol --> UC : tiposObrigatorios
 UC -> Est : homologar(candidatura, orientadorId, tiposObrigatorios)
@@ -29,11 +39,17 @@ Est -> Cand : estaAceita()
 
 alt candidatura não aceita
   Cand --> Est : false
-  Est --> UC : erro (candidatura não aceita)
-  UC --> Ctrl : erro (candidatura não aceita)
-  Ctrl -> View : exibir erro
+  Est --> UC : RegraViolada (candidatura não aceita)
+  UC --> Ctrl : RegraViolada (candidatura não aceita)
+  Ctrl -> View : exibir erro (409)
   View --> Coord : homologação recusada
-else candidatura aceita
+else orientadorId vazio
+  Cand --> Est : true
+  Est --> UC : DadosInvalidos (sem orientador)
+  UC --> Ctrl : DadosInvalidos (sem orientador)
+  Ctrl -> View : exibir erro (400)
+  View --> Coord : homologação recusada
+else candidatura aceita e orientador informado
   Cand --> Est : true
   note over Est : cria um Documento PENDENTE\npor tipo obrigatório
   Est --> UC : estagio

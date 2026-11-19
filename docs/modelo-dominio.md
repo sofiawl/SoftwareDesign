@@ -89,7 +89,7 @@ classDiagram
     }
 
     Vaga "1" *-- "0..*" Candidatura
-    Estagio "0..1" --> "1" Candidatura : nasce de
+    Estagio ..> Candidatura : guarda candidaturaId
     Estagio "1" *-- "1..*" Documento
     Estagio "1" *-- "0..*" Atividade
     Estagio ..> PoliticaEstagio : tipos obrigatórios

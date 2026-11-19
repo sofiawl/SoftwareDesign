@@ -28,13 +28,16 @@ class HomologarEstagio <<app>> {
   +executar(solicitante, candidaturaId, orientadorId)
 }
 
-' ---------- Interfaces (estáveis) ----------
-interface PoliticaEstagio <<contrato>> {
+' ---------- Interface de domínio (regra do regulamento) ----------
+interface PoliticaEstagio <<dominio>> {
   +documentosObrigatorios()
   +podeDecidir(etapa, papel)
 }
+
+' ---------- Interfaces da aplicação (estáveis) ----------
 interface RepositorioProcesso <<contrato>> {
   +buscarVagaDaCandidatura(candidaturaId)
+  +buscarEstagioDaCandidatura(candidaturaId)
   +salvarEstagio(estagio)
   +salvarAvisoPendente(aviso, motivo)
 }
@@ -48,6 +51,8 @@ class Estagio <<dominio>> {
   -orientadorId
   -estado
   +{static} homologar(candidatura, orientadorId, tipos)
+  +entregarDocumento(tipo)
+  +recusarDocumento(tipo, motivo)
   +registrarAtividade(data, descricao, horas)
   +encerrar(motivo)
 }
@@ -67,6 +72,7 @@ class Vaga <<dominio>> {
   -estado
   +candidatar(estudanteId)
   +candidatura(candidaturaId)
+  +encerrar()
 }
 class Candidatura <<dominio>> {
   -estudanteId
@@ -107,6 +113,7 @@ Estagio ..> Candidatura
 
 legend right
   Cinza: apresentação (MVC) | Azul: aplicação
-  Verde: interfaces | Laranja: domínio | Roxo: infraestrutura
+  Verde: interfaces da aplicação | Roxo: infraestrutura
+  Laranja: domínio (inclui a interface PoliticaEstagio)
 endlegend
 @enduml

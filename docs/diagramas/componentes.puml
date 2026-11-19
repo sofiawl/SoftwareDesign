@@ -6,13 +6,14 @@ skinparam nodesep 40
 skinparam ranksep 60
 top to bottom direction
 
-package "Apresentação (MVC)" {
-  component "Controllers\nVagaController, EstagioController,\nAcompanhamentoController, SituacaoController" as Ctrl
+package "Apresentação" {
+  component "Controllers\nLoginController, VagaController, EstagioController,\nAcompanhamentoController, SituacaoController" as Ctrl
+  component "Sessao\nidentifica o Solicitante\npelo cookie" as Sessao
   component "Views\ntelas de vaga, candidatura,\nestágio e situação" as Views
 }
 
 package "Aplicação" {
-  component "Casos de uso\nCadastrarVaga, Candidatar, DecidirCandidatura,\nHomologarEstagio, EntregarDocumento, RecusarDocumento,\nRegistrarAtividade, EncerrarEstagio, ConsultarSituacao" as UC
+  component "Casos de uso\nCadastrarVaga, Candidatar, DecidirCandidatura,\nHomologarEstagio, EntregarDocumento, RecusarDocumento,\nRegistrarAtividade, EncerrarEstagio, ConsultarSituacao,\nListarPainel" as UC
   component "Interfaces\nRepositorioProcesso, LeituraSituacao, Notificador,\nAviso, TipoEvento, ResultadoAviso, AvisoPendente" as Intf
 }
 
@@ -26,6 +27,7 @@ package "Domínio" {
 package "Infraestrutura" {
   component "RepositorioPersistente\n(RNF02)" as Repo
   component "NotificadorSimulado\n(RNF04)" as Notif
+  component "CadastroUsuarios\n(identidade)" as Cadastro
 }
 
 component "Composição (Main)\nescolhe as implementações\ne monta os Controllers" as Main
@@ -33,6 +35,7 @@ component "Composição (Main)\nescolhe as implementações\ne monta os Controll
 ' ---------- Apresentação -> Aplicação ----------
 Ctrl -right-> Views : escolhe e entrega\nSituacaoVisivel
 Ctrl -down-> UC : chama um\ncaso de uso
+Ctrl -right-> Sessao : pede o Solicitante
 
 ' ---------- Aplicação -> Domínio ----------
 UC -right-> Intf
@@ -57,12 +60,8 @@ Notif .up.> Intf : <<implementa>>\nNotificador
 ' ---------- Composição ----------
 Main .up.> Repo : <<instancia>>
 Main .up.> Notif : <<instancia>>
+Main .up.> Cadastro : <<instancia>>
+Main .up.> Sessao : <<instancia>>\nentrega buscar e listar\nde CadastroUsuarios
 Main .up.> Ctrl : <<instancia>>
 
-legend bottom
-  Cada camada só chama a de baixo.
-  A infraestrutura implementa interfaces definidas na aplicação (inversão de dependência).
-  O domínio não depende de nenhuma outra camada. Não há ciclo entre componentes.
-  Controller sem regra de negócio: não acessa o repositório nem a política. View exibe só o que recebe (RNF01).
-endlegend
 @enduml
